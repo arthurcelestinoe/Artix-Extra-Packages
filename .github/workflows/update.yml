@@ -1,0 +1,75 @@
+name: Verificar upstream
+
+on:
+  schedule:
+    - cron: '17 6 * * *'   # todo dia, 06:17 UTC
+  workflow_dispatch:
+
+env:
+  REPO_NAME: artix-extra-unofficial
+  REPO_URL: https://github.com/${{ github.repository }}/releases/download/repo
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    container: artixlinux/artixlinux:base-devel
+    outputs:
+      updates: ${{ steps.check.outputs.updates }}
+    steps:
+      - run: |
+          pacman-key --init
+          pacman-key --populate artix
+          pacman -Syu --noconfirm --needed git nvchecker jq
+      - uses: actions/checkout@v5
+      - id: check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          git config --global --add safe.directory '*'
+          updates=$(scripts/check-updates.sh)
+          echo "updates=$updates" >> "$GITHUB_OUTPUT"
+          echo "versões novas: $updates"
+
+  # Para cada versão nova: atualiza o PKGBUILD, testa a compilação e só então
+  # abre (ou atualiza) um PR. O merge do PR dispara o build.yml e publica.
+  bump:
+    needs: check
+    if: needs.check.outputs.updates != '[]'
+    runs-on: ubuntu-latest
+    container: artixlinux/artixlinux:base-devel
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        update: ${{ fromJSON(needs.check.outputs.updates) }}
+    steps:
+      - run: |
+          pacman-key --init
+          pacman-key --populate artix
+          pacman -Syu --noconfirm --needed git pacman-contrib
+      - uses: actions/checkout@v5
+      - run: scripts/ci-setup.sh
+      - name: Atualizar PKGBUILD
+        env:
+          PKG: ${{ matrix.update.pkg }}
+          VER: ${{ matrix.update.version }}
+        run: scripts/bump.sh "$PKG" "$VER"
+      - name: Testar compilação
+        env:
+          PKG: ${{ matrix.update.pkg }}
+        run: scripts/build-package.sh "$PKG" /tmp/test-out
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: update/${{ matrix.update.pkg }}
+          delete-branch: true
+          add-paths: packages/*/${{ matrix.update.pkg }}/PKGBUILD
+          commit-message: '${{ matrix.update.pkg }}: ${{ matrix.update.version }}'
+          title: '${{ matrix.update.pkg }}: ${{ matrix.update.version }}'
+          body: |
+            Versão nova detectada no upstream pelo nvchecker.
+            O PKGBUILD foi atualizado e compilou no container do Artix.

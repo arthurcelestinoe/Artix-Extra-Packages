@@ -1,0 +1,13 @@
+out/
+packages/*/*/src/
+packages/*/*/pkg/
+*.pkg.tar.*
+*.log
+
+# Nunca versionar chaves privadas
+*secret*.asc
+*.key
+*.gpg
+
+# Anotações locais do mantenedor
+docs/

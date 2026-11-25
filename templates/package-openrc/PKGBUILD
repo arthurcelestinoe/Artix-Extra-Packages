@@ -1,0 +1,30 @@
+# Modelo de pacote de init, no formato que o Artix usa: um PKGBUILD próprio,
+# separado do pacote principal. Copie para packages/<inicial>/<nome>-openrc e
+# ajuste (ex.: packages/f/foo-openrc, ao lado de packages/f/foo).
+# Para runit, s6 e dinit, a estrutura é a mesma; mudam os arquivos instalados,
+# a dependência do init e o nome (<nome>-runit, <nome>-s6, <nome>-dinit).
+#
+# O pkgver é a data da última mudança no script (AAAAMMDD), não a versão do
+# programa. Pacotes de init não têm .nvchecker.toml.
+
+_pkgname=exemplo
+pkgname=$_pkgname-openrc
+pkgver=20260101
+pkgrel=1
+pkgdesc="Script do OpenRC para $_pkgname"
+arch=(any)
+url="https://github.com/arthurcelestinoe/Artix-Extra-Packages"
+license=(0BSD)
+depends=(openrc "$_pkgname")
+# Só um pacote de init por programa pode estar instalado.
+provides=("init-$_pkgname")
+conflicts=("init-$_pkgname")
+source=("$_pkgname.initd"
+        "$_pkgname.confd")
+sha256sums=('SKIP'
+            'SKIP')
+
+package() {
+  install -Dm755 "$_pkgname.initd" "$pkgdir/etc/init.d/$_pkgname"
+  install -Dm644 "$_pkgname.confd" "$pkgdir/etc/conf.d/$_pkgname"
+}

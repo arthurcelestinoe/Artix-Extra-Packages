@@ -1,0 +1,28 @@
+# Modelo de pacote. Copie este diretório para packages/<inicial>/<nome> e
+# ajuste (ex.: packages/f/foo).
+# Scripts de init vão num pacote separado: veja templates/package-openrc.
+
+pkgname=exemplo
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Descrição curta do programa"
+arch=(x86_64)
+url="https://github.com/DONO/exemplo"
+license=(MIT)
+depends=()
+makedepends=()
+# Fonte direto do upstream. O nome local evita colisão entre pacotes.
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+# scripts/bump.sh preenche via updpkgsums.
+sha256sums=('SKIP')
+
+build() {
+  cd "$pkgname-$pkgver"
+  make
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  make DESTDIR="$pkgdir" PREFIX=/usr install
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+}

@@ -1,0 +1,26 @@
+# Onde procurar versões novas. A seção tem que ter o nome do diretório.
+# Referência: https://nvchecker.readthedocs.io/en/latest/usage.html
+# Use só UMA das opções abaixo.
+
+[exemplo]
+# GitHub: maior tag (ou use_latest_release = true para Releases).
+source = "github"
+github = "DONO/exemplo"
+use_max_tag = true
+prefix = "v"
+
+# Qualquer repositório git (Codeberg, sourcehut, cgit, servidor próprio):
+# source = "git"
+# git = "https://codeberg.org/DONO/exemplo.git"
+# prefix = "v"
+
+# GitLab (inclusive instâncias próprias):
+# source = "gitlab"
+# gitlab = "DONO/exemplo"
+# host = "gitlab.freedesktop.org"
+# use_max_tag = true
+
+# Ignorar tags que não são versões e converter "1-2-3" em "1.2.3":
+# include_regex = "v[0-9.-]+"
+# from_pattern = "-"
+# to_pattern = "."

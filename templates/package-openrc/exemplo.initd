@@ -1,0 +1,12 @@
+#!/usr/bin/openrc-run
+
+description="Daemon de exemplo"
+command="/usr/bin/exemplo"
+command_args="${EXEMPLO_ARGS}"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+
+depend() {
+	need net
+	use logger
+}

@@ -1,0 +1,100 @@
+name: Compilar e publicar
+
+on:
+  push:
+    branches: [master]
+    paths: ['packages/**']
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Pacotes separados por espaço, ou "all"'
+        required: true
+        default: all
+
+env:
+  REPO_NAME: artix-extra-unofficial
+  REPO_URL: https://github.com/${{ github.repository }}/releases/download/repo
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.list.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - id: list
+        env:
+          INPUT: ${{ github.event.inputs.packages }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [[ $GITHUB_EVENT_NAME == workflow_dispatch && $INPUT != all ]]; then
+            json=$(scripts/changed-packages.sh $INPUT)
+          elif [[ $GITHUB_EVENT_NAME == workflow_dispatch || $BEFORE =~ ^0+$ ]]; then
+            json=$(scripts/changed-packages.sh --all)
+          else
+            json=$(scripts/changed-packages.sh --diff "$BEFORE" "$SHA")
+          fi
+          echo "packages=$json" >> "$GITHUB_OUTPUT"
+          echo "a compilar: $json"
+
+  build:
+    needs: detect
+    if: needs.detect.outputs.packages != '[]'
+    runs-on: ubuntu-latest
+    container: artixlinux/artixlinux:base-devel
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.detect.outputs.packages) }}
+    steps:
+      - name: Atualizar o sistema
+        run: |
+          pacman-key --init
+          pacman-key --populate artix
+          pacman -Syu --noconfirm --needed git
+      - uses: actions/checkout@v5
+      - run: scripts/ci-setup.sh
+      - name: Compilar
+        env:
+          PKG: ${{ matrix.package }}
+        run: scripts/build-package.sh "$PKG" out
+      - name: Conferir regras
+        env:
+          PKG: ${{ matrix.package }}
+        run: scripts/lint-package.sh "$PKG" out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pkg-${{ matrix.package }}
+          path: out/*.pkg.tar.zst
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    # Publica o que compilou, mesmo que algum pacote da matriz tenha falhado.
+    if: ${{ !cancelled() && needs.build.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-repo
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pkg-*
+          merge-multiple: true
+          path: out
+      - name: Publicar no Release "repo"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: scripts/publish.sh out
