@@ -179,11 +179,58 @@ Na primeira contribuição, o teste só roda depois que o mantenedor aprovar.
 
 Checklist do `PKGBUILD`:
 
-- `license=()` com o identificador SPDX correto.
+- Cabeçalho SPDX com autoria e licença (veja [Licença e autoria](#licença-e-autoria)).
+- `license=()` com o identificador SPDX da licença **do programa**.
 - Fontes baixadas do upstream, com checksums (`updpkgsums` preenche). `SKIP`
   só para fontes git.
 - Nenhuma dependência de `systemd`/`systemd-libs`.
 - Nenhuma unit do systemd (`.service`, `.socket`, `.timer`) instalada.
+
+### Licença e autoria
+
+> [!IMPORTANT]
+> Todo PKGBUILD, script de init e demais arquivos de empacotamento enviados a
+> este repositório ficam sujeitos à licença [0BSD](LICENSE). Ao abrir um PR,
+> você concorda em disponibilizar sua contribuição sob essa licença.
+>
+> **Quem propõe o PKGBUILD é responsável pela autoria declarada nele.** Ao
+> enviar, você declara que as linhas de autoria são verdadeiras e que tem o
+> direito de licenciar o conteúdo sob a 0BSD. Isso inclui dar o devido crédito
+> quando o PKGBUILD for baseado no trabalho de outra pessoa (Arch, AUR ou
+> outro repositório).
+
+A autoria e a licença de cada arquivo são indicadas no começo dele, com as
+tags [SPDX](https://spdx.dev/learn/handling-license-info/) no formato do
+[REUSE](https://reuse.software/spec/):
+
+```bash
+# SPDX-FileCopyrightText: 2026 Seu Nome <seu@email>
+# SPDX-License-Identifier: 0BSD
+# Maintainer: Seu Nome <seu@email>
+
+pkgname=foo
+...
+```
+
+- **`SPDX-FileCopyrightText`**: uma linha por autor, com o ano da contribuição.
+  Quem fizer uma mudança significativa adiciona a própria linha, sem apagar as
+  anteriores.
+- **`SPDX-License-Identifier`**: sempre `0BSD`. É a licença do arquivo de
+  empacotamento.
+- **`Maintainer` / `Contributor`**: a convenção do Arch para indicar quem
+  mantém o pacote. Quem deixar de manter vira `Contributor`.
+- **Baseado no Arch:** os repositórios de empacotamento do Arch também usam
+  0BSD. Mantenha as linhas `Maintainer`/`Contributor` originais e acrescente
+  `# SPDX-FileCopyrightText: Arch Linux contributors`. O
+  `scripts/import-arch.sh` faz isso automaticamente.
+- **Baseado no AUR:** o AUR não tem uma licença única. Só envie se o autor
+  original permitir a redistribuição sob 0BSD, e mantenha o crédito dele.
+- **E-mail:** pode ser o endereço `noreply` do GitHub ou um e-mail ofuscado
+  (`nome at dominio dot com`).
+
+Não confunda os dois campos de licença. O cabeçalho `SPDX-License-Identifier`
+é a licença **do PKGBUILD**, sempre 0BSD. O `license=()` dentro do PKGBUILD é a
+licença **do programa empacotado**, por exemplo `GPL-3.0-or-later` ou `MIT`.
 
 ## Limitações conhecidas
 
@@ -195,3 +242,10 @@ Checklist do `PKGBUILD`:
 - Pacotes com epoch (`1:2.0-1`) são publicados com `.` no lugar de `:` no nome
   do arquivo, porque o GitHub não aceita `:` em arquivos de Release. Isso não
   afeta a instalação.
+
+## Licença
+
+Os arquivos de empacotamento deste repositório (PKGBUILDs, scripts de init,
+scripts e workflows) estão sob a licença [0BSD](LICENSE). Os programas
+empacotados mantêm cada um a sua própria licença, indicada no campo
+`license=()` do PKGBUILD e instalada em `/usr/share/licenses/<pacote>`.

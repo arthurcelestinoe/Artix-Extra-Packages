@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Seu Nome <seu@email>
+# SPDX-License-Identifier: 0BSD
+# Maintainer: Seu Nome <seu@email>
+#
 # Modelo de pacote de init, no formato que o Artix usa: um PKGBUILD próprio,
 # separado do pacote principal. Copie para packages/<inicial>/<nome>-openrc e
 # ajuste (ex.: packages/f/foo-openrc, ao lado de packages/f/foo).

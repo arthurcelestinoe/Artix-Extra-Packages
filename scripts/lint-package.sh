@@ -18,6 +18,15 @@ array() {
 }
 has() { grep -qxF -- "$2" <<<"$1"; }
 
+# Cabeçalho SPDX: autoria declarada e licença do arquivo de empacotamento.
+grep -q '^# SPDX-FileCopyrightText: .\+' "$pkgbuild" \
+    || fail "PKGBUILD sem '# SPDX-FileCopyrightText:' (veja Licença e autoria no README)"
+grep -qx '# SPDX-License-Identifier: 0BSD' "$pkgbuild" \
+    || fail "PKGBUILD sem '# SPDX-License-Identifier: 0BSD'"
+if grep -q '^# SPDX-FileCopyrightText: .*Seu Nome' "$pkgbuild"; then
+    fail "PKGBUILD ainda tem a autoria de exemplo do modelo (Seu Nome)"
+fi
+
 # Nada de systemd nas dependências (com ou sem restrição de versão).
 # No Artix, quem "fornece" systemd/systemd-libs/libsystemd é o
 # artix-archlinux-support, um pacote só de metadados (sem as bibliotecas) que
