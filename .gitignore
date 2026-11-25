@@ -4,10 +4,10 @@ packages/*/*/pkg/
 *.pkg.tar.*
 *.log
 
-# Nunca versionar chaves privadas
+# Never commit private keys
 *secret*.asc
 *.key
 *.gpg
 
-# Anotações locais do mantenedor
+# Local maintainer notes
 docs/

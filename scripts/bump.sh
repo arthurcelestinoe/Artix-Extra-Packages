@@ -1,25 +1,26 @@
 #!/usr/bin/env bash
-# Atualiza o PKGBUILD para uma versão nova: pkgver, pkgrel=1 e checksums.
-# Uso: scripts/bump.sh <pacote> <versão>
+# Updates a PKGBUILD to a new version: pkgver, pkgrel=1 and checksums.
+# Usage: scripts/bump.sh <package> <version>
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
-pkg=${1:?uso: $0 <pacote> <versão>}
-ver=${2:?uso: $0 <pacote> <versão>}
-valid_pkg "$pkg" || die "pacote '$pkg' não encontrado"
+pkg=${1:?usage: $0 <package> <version>}
+ver=${2:?usage: $0 <package> <version>}
+valid_pkg "$pkg" || die "package '$pkg' not found"
 
-# pkgver não aceita "-", ":" nem "/". Se o upstream usa esses caracteres,
-# ajuste com from_pattern/to_pattern no .nvchecker.toml.
-[[ $ver =~ ^[[:alnum:]._+]+$ ]] || die "'$ver' não é um pkgver válido"
+# pkgver can't contain "-", ":" or "/". If upstream uses those characters,
+# adjust with from_pattern/to_pattern in .nvchecker.toml.
+[[ $ver =~ ^[[:alnum:]._+]+$ ]] || die "'$ver' is not a valid pkgver"
 
 pkgbuild=$(pkg_dir "$pkg")/PKGBUILD
 sed -i -E "s/^pkgver=.*/pkgver=$ver/; s/^pkgrel=.*/pkgrel=1/" "$pkgbuild"
-[[ $(pkgbuild_var "$pkgbuild" pkgver) == "$ver" ]] || die "não consegui alterar pkgver em $pkgbuild"
+[[ $(pkgbuild_var "$pkgbuild" pkgver) == "$ver" ]] || die "could not change pkgver in $pkgbuild"
 
-# updpkgsums baixa as fontes novas; roda numa cópia e trazemos só o PKGBUILD.
+# updpkgsums downloads the new sources; it runs on a copy and we bring back
+# only the PKGBUILD.
 build=$(stage_package "$pkg")
 (cd "$build" && as_builder updpkgsums)
 cp "$build/PKGBUILD" "$pkgbuild"
 rm -rf "$build"
 
-echo "$pkg atualizado para $ver"
+echo "$pkg updated to $ver"

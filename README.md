@@ -1,30 +1,31 @@
 # Artix Extra Packages
 
-Repositório pacman que fornece pacotes compilados que não estão nos
-repositórios oficiais do Artix Linux. Cada pacote é compilado a partir do
-código-fonte do upstream, sem systemd. Os serviços têm pacotes de init
-separados, para os inits suportados pelo Artix.
+**English** | [Português (Brasil)](README.pt-BR.md)
+
+A pacman repository providing compiled packages that are not in the official
+Artix Linux repositories. Every package is built from the upstream source
+code, without systemd. Services have separate init packages for the init
+systems Artix supports.
 
 > [!WARNING]
-> **Este repositório não é oficial e não tem nenhuma ligação com o projeto
-> Artix Linux.** Ele foi feito para uso pessoal e é mantido por uma única
-> pessoa.
+> **This repository is unofficial and has no affiliation with the Artix Linux
+> project.** It was made for personal use and is maintained by a single
+> person.
 >
-> Se encontrar um bug em algum pacote daqui, reporte nas
-> [issues deste repositório](https://github.com/arthurcelestinoe/Artix-Extra-Packages/issues),
-> **e não nos canais oficiais do Artix** (fórum, bug tracker, IRC/Matrix).
-> A equipe do Artix não dá suporte a estes pacotes.
+> If you find a bug in a package from here, report it in
+> [this repository's issues](https://github.com/arthurcelestinoe/Artix-Extra-Packages/issues),
+> **not in the official Artix channels** (forum, bug tracker, IRC/Matrix).
+> The Artix team does not support these packages.
 
 > [!CAUTION]
-> **Isenção de responsabilidade:** os pacotes são fornecidos "como estão", sem
-> garantia de nenhum tipo, explícita ou implícita. Você os instala e usa por
-> sua conta e risco. O mantenedor não se responsabiliza por perda de dados,
-> sistemas quebrados ou qualquer outro dano decorrente do uso deste
-> repositório.
+> **Disclaimer:** the packages are provided "as is", without warranty of any
+> kind, express or implied. You install and use them at your own risk. The
+> maintainer is not responsible for data loss, broken systems or any other
+> damage resulting from the use of this repository.
 
-## Usar o repositório
+## Using the repository
 
-1. Importe e assine localmente a chave que assina os pacotes:
+1. Import and locally sign the key that signs the packages:
 
    ```bash
    curl -sL https://raw.githubusercontent.com/arthurcelestinoe/Artix-Extra-Packages/master/keys/artix-extra-unofficial.asc \
@@ -32,7 +33,7 @@ separados, para os inits suportados pelo Artix.
    sudo pacman-key --lsign-key BD87D7B0AADAA10656F9D04A8C8EF2FAA136031C
    ```
 
-2. Adicione ao fim do `/etc/pacman.conf`:
+2. Add to the end of `/etc/pacman.conf`:
 
    ```ini
    [artix-extra-unofficial]
@@ -40,212 +41,217 @@ separados, para os inits suportados pelo Artix.
    Server = https://github.com/arthurcelestinoe/Artix-Extra-Packages/releases/download/repo
    ```
 
-3. `sudo pacman -Sy` e instale normalmente. Para serviços, instale também o
-   pacote do seu init: `sudo pacman -S <pacote> <pacote>-openrc` (ou `-runit`,
-   `-s6`, `-dinit`, quando houver).
+3. Run `sudo pacman -Sy` and install as usual. For services, also install the
+   package for your init: `sudo pacman -S <package> <package>-openrc` (or
+   `-runit`, `-s6`, `-dinit`, when available).
 
-## Como funciona
+## How it works
 
-Os pacotes ficam agrupados pela inicial do nome, e os pacotes de init ficam
-ao lado do programa:
+Packages are grouped by the first letter of their name, and init packages sit
+next to the program:
 
 ```
 packages/
 ├── f/
 │   ├── foo/
-│   │   ├── PKGBUILD          baixa a fonte direto do upstream
-│   │   └── .nvchecker.toml   onde procurar versões novas
-│   └── foo-openrc/           pacote de init (só para serviços)
+│   │   ├── PKGBUILD          downloads the source straight from upstream
+│   │   └── .nvchecker.toml   where to look for new versions
+│   └── foo-openrc/           init package (services only)
 │       ├── PKGBUILD
 │       ├── foo.initd
 │       └── foo.confd
 └── 0/
-    └── 0ad/                  nomes que começam com número também valem
-templates/                    modelos para pacotes novos
+    └── 0ad/                  names starting with a digit work too
+templates/                    templates for new packages
 ```
 
-Um pacote fora da pasta da sua inicial (por exemplo, `packages/b/foo`) faz o
-CI falhar.
+A package outside the folder of its initial (for example, `packages/b/foo`)
+makes CI fail.
 
-- **`update.yml`** roda todo dia. Ele consulta o upstream de cada pacote com
-  [nvchecker](https://github.com/lilydjwg/nvchecker), que entende tags de
-  qualquer repositório git, Releases do GitHub, GitLab, Gitea/Codeberg, PyPI,
-  crates.io e outros. Para cada versão nova, ele atualiza `pkgver` e os
-  checksums, testa a compilação e abre um PR.
-- **`build.yml`** roda quando algo em `packages/` muda na `master`. Ele compila
-  os pacotes alterados no container `artixlinux/artixlinux:base-devel`, assina
-  com GPG e publica no Release `repo`, que é o repositório pacman. Versões
-  antigas são apagadas do Release depois que as novas sobem.
+- **`update.yml`** runs every day. It queries each package's upstream with
+  [nvchecker](https://github.com/lilydjwg/nvchecker), which understands tags
+  from any git repository, GitHub Releases, GitLab, Gitea/Codeberg, PyPI,
+  crates.io and more. For each new version, it updates `pkgver` and the
+  checksums, test-builds the package and opens a PR.
+- **`build.yml`** runs when something under `packages/` changes on `master`.
+  It builds the changed packages in the `artixlinux/artixlinux:base-devel`
+  container, signs them with GPG and publishes them to the `repo` Release,
+  which is the pacman repository. Old versions are deleted from the Release
+  after the new ones are uploaded.
 
-## Adicionar um pacote
+## Adding a package
 
-O jeito mais rápido é partir do empacotamento do Arch. Ele já usa a fonte do
-upstream e quase sempre já tem um `.nvchecker.toml`:
+The quickest way is to start from Arch's packaging. It already uses the
+upstream source and almost always has a `.nvchecker.toml`:
 
 ```bash
-scripts/import-arch.sh <pacote>
+scripts/import-arch.sh <package>
 ```
 
-O script lista o que menciona systemd. Depois disso:
+The script lists everything that mentions systemd. Then:
 
-1. Troque dependências de `systemd`/`systemd-libs` por `elogind`/`libelogind`,
-   quando houver.
-2. Remova a instalação de `.service`/`.socket`/`.timer`.
-3. Se for um serviço, crie o pacote de init seguindo as
-   [convenções do Artix](#pacotes-de-init). Há um exemplo para OpenRC em
+1. Replace `systemd`/`systemd-libs` dependencies with `elogind`/`libelogind`,
+   where applicable.
+2. Remove the installation of `.service`/`.socket`/`.timer` files.
+3. If it is a service, create the init package following the
+   [Artix conventions](#init-packages). There is an OpenRC example in
    [templates/package-openrc](templates/package-openrc).
-4. Teste localmente no Artix: `scripts/build-package.sh <pacote>` (os pacotes
-   saem em `out/`).
-5. Confira o monitoramento: `scripts/check-updates.sh <pacote>`.
+4. Test locally on Artix: `scripts/build-package.sh <package>` (packages are
+   written to `out/`).
+5. Check the monitoring: `scripts/check-updates.sh <package>`.
 
-Para um pacote que não existe no Arch, copie `templates/package` para
-`packages/<inicial>/<pacote>`.
+For a package that doesn't exist on Arch, copy `templates/package` to
+`packages/<initial>/<package>`.
 
-## Contribuir
+## Contributing
 
-Contribuições são bem-vindas por pull request. Antes de propor um pacote, veja
-se ele se encaixa nas regras abaixo.
+Contributions are welcome through pull requests. Before proposing a package,
+check that it fits the rules below.
 
-### O que é aceito
+### What is accepted
 
-- Software livre ou de código aberto, com licença aprovada pela
-  [OSI](https://opensource.org/licenses) ou pela
+- Free or open source software, under a license approved by the
+  [OSI](https://opensource.org/licenses) or the
   [FSF](https://www.gnu.org/licenses/license-list.html).
-- Pacotes que **não** estão nos repositórios oficiais do Artix. Confira em
-  [packages.artixlinux.org](https://packages.artixlinux.org) antes.
-- Pacotes compilados a partir do código-fonte do upstream.
+- Packages that are **not** in the official Artix repositories. Check
+  [packages.artixlinux.org](https://packages.artixlinux.org) first.
+- Packages built from the upstream source code.
 
-### O que não é aceito
+### What is not accepted
 
-- **Programas proprietários**, inclusive freeware, binários sem código-fonte e
-  reempacotamentos de binários (`-bin`).
-- **Programas de código aberto cuja política de marca registrada restringe
-  builds de terceiros.** É o caso de projetos que não permitem distribuir uma
-  versão compilada por outra pessoa, ou com patches, usando o nome e o logotipo
-  oficiais, como o Firefox. O código é livre, mas o pacote acabaria exigindo
-  rebranding ou autorização da dona da marca.
-- Pacotes que dependem de systemd para funcionar.
+- **Proprietary software**, including freeware, binaries without source code
+  and binary repackages (`-bin`).
+- **Open source software whose trademark policy restricts third-party
+  builds.** This covers projects that don't allow distributing a version built
+  by someone else, or with patches, under the official name and logo, such as
+  Firefox. The code is free, but the package would end up requiring
+  rebranding or permission from the trademark owner.
+- Packages that depend on systemd to work.
 
-### Pacotes de init
+### Init packages
 
-O repositório aceita scripts para qualquer init suportado pelo Artix: OpenRC,
-runit, s6 e dinit. Se o programa é um serviço, **quem propõe o pacote deve
-criar o pacote de init**, seguindo as convenções do Artix:
+The repository accepts scripts for any init system Artix supports: OpenRC,
+runit, s6 and dinit. If the program is a service, **whoever proposes the
+package must create the init package**, following the Artix conventions:
 
-- **Um PKGBUILD próprio por init**, em `packages/<inicial>/<pacote>-<init>/`, separado do
-  pacote principal. Não use pacote dividido (split package).
-- `arch=(any)` e `pkgver` com a data da última mudança no script (`AAAAMMDD`),
-  não a versão do programa.
-- `provides=(init-<pacote>)` e `conflicts=(init-<pacote>)`, para que só um
-  pacote de init do programa fique instalado por vez.
-- Dependência do pacote principal e do init, com os arquivos nos caminhos que
-  o Artix usa:
+- **A separate PKGBUILD for each init**, in
+  `packages/<initial>/<package>-<init>/`, apart from the main package. Don't
+  use a split package.
+- `arch=(any)` and a `pkgver` set to the date of the script's last change
+  (`YYYYMMDD`), not the program's version.
+- `provides=(init-<package>)` and `conflicts=(init-<package>)`, so that only
+  one init package for the program is installed at a time.
+- A dependency on the main package and on the init, with the files in the
+  paths Artix uses:
 
-  | Pacote            | `depends`             | Arquivos instalados |
-  |-------------------|-----------------------|---------------------|
-  | `<pacote>-openrc` | `openrc`, `<pacote>`  | `/etc/init.d/<serviço>`, `/etc/conf.d/<serviço>` |
-  | `<pacote>-runit`  | `runit`, `<pacote>`   | `/etc/runit/sv/<serviço>/run` |
-  | `<pacote>-s6`     | `s6-base`, `<pacote>` | `/etc/s6/sv/<serviço>-srv/` e `/etc/s6/sv/<serviço>-log/` (definições s6-rc), `/etc/s6/config/<pacote>.conf` |
-  | `<pacote>-dinit`  | `dinit`, `<pacote>`   | `/etc/dinit.d/<serviço>` |
+  | Package            | `depends`              | Installed files |
+  |--------------------|------------------------|-----------------|
+  | `<package>-openrc` | `openrc`, `<package>`  | `/etc/init.d/<service>`, `/etc/conf.d/<service>` |
+  | `<package>-runit`  | `runit`, `<package>`   | `/etc/runit/sv/<service>/run` |
+  | `<package>-s6`     | `s6-base`, `<package>` | `/etc/s6/sv/<service>-srv/` and `/etc/s6/sv/<service>-log/` (s6-rc definitions), `/etc/s6/config/<package>.conf` |
+  | `<package>-dinit`  | `dinit`, `<package>`   | `/etc/dinit.d/<service>` |
 
-- Na dúvida, use como referência um pacote de init do próprio Artix. O
-  `openssh` tem os quatro: `openssh-openrc`, `openssh-runit`, `openssh-s6` e
-  `openssh-dinit`, em [packages.artixlinux.org](https://packages.artixlinux.org)
-  (com a lista de arquivos) e no
-  [Gitea do Artix](https://gitea.artixlinux.org/packages/openssh-runit).
+- When in doubt, use an init package from Artix itself as a reference.
+  `openssh` has all four: `openssh-openrc`, `openssh-runit`, `openssh-s6` and
+  `openssh-dinit`, on [packages.artixlinux.org](https://packages.artixlinux.org)
+  (with the file list) and on
+  [Artix's Gitea](https://gitea.artixlinux.org/packages/openssh-runit).
 
-Basta enviar o init que você usa e consegue testar. Os outros podem vir em
-contribuições futuras, de você ou de outra pessoa.
+Sending the init you use and can test is enough. The others can come in
+future contributions, from you or someone else.
 
-### Como enviar
+### How to submit
 
-1. Faça um fork e crie `packages/<inicial>/<pacote>/` com o `PKGBUILD` e o
-   `.nvchecker.toml`, e, se for um serviço, `packages/<inicial>/<pacote>-<init>/`. O
-   jeito mais fácil de começar é com `scripts/import-arch.sh` ou com os modelos
-   `templates/package` e `templates/package-openrc`.
-2. Compile num Artix atualizado com `scripts/build-package.sh <pacote>` e
-   teste o programa e o serviço de verdade. Depois rode
-   `scripts/lint-package.sh <pacote> out` para conferir as regras abaixo.
-3. Confira se o monitoramento acha a versão atual:
-   `scripts/check-updates.sh <pacote>`.
-4. Abra o PR com um programa por vez (o pacote e os pacotes de init dele),
-   informando:
-   - a licença do programa;
-   - qual init você testou;
-   - qualquer patch aplicado e o motivo.
+1. Fork the repository and create `packages/<initial>/<package>/` with the
+   `PKGBUILD` and `.nvchecker.toml` and, if it is a service,
+   `packages/<initial>/<package>-<init>/`. The easiest way to start is with
+   `scripts/import-arch.sh` or the `templates/package` and
+   `templates/package-openrc` templates.
+2. Build it on an up-to-date Artix with `scripts/build-package.sh <package>`
+   and actually test the program and the service. Then run
+   `scripts/lint-package.sh <package> out` to check the rules below.
+3. Check that the monitoring finds the current version:
+   `scripts/check-updates.sh <package>`.
+4. Open the PR with one program at a time (the package and its init
+   packages), stating:
+   - the program's license;
+   - which init you tested;
+   - any patch applied and why.
 
-O PR é compilado e conferido automaticamente num container limpo do Artix.
-Na primeira contribuição, o teste só roda depois que o mantenedor aprovar.
+The PR is automatically built and checked in a clean Artix container. On a
+first contribution, the test only runs after the maintainer approves it.
 
-Checklist do `PKGBUILD`:
+`PKGBUILD` checklist:
 
-- Cabeçalho SPDX com autoria e licença (veja [Licença e autoria](#licença-e-autoria)).
-- `license=()` com o identificador SPDX da licença **do programa**.
-- Fontes baixadas do upstream, com checksums (`updpkgsums` preenche). `SKIP`
-  só para fontes git.
-- Nenhuma dependência de `systemd`/`systemd-libs`.
-- Nenhuma unit do systemd (`.service`, `.socket`, `.timer`) instalada.
+- SPDX header with authorship and license (see
+  [License and authorship](#license-and-authorship)).
+- `license=()` with the SPDX identifier of **the program's** license.
+- Sources downloaded from upstream, with checksums (`updpkgsums` fills them
+  in). `SKIP` only for git sources.
+- No `systemd`/`systemd-libs` dependency.
+- No systemd unit (`.service`, `.socket`, `.timer`) installed.
 
-### Licença e autoria
+### License and authorship
 
 > [!IMPORTANT]
-> Todo PKGBUILD, script de init e demais arquivos de empacotamento enviados a
-> este repositório ficam sujeitos à licença [0BSD](LICENSE). Ao abrir um PR,
-> você concorda em disponibilizar sua contribuição sob essa licença.
+> Every PKGBUILD, init script and other packaging file submitted to this
+> repository is subject to the [0BSD](LICENSE) license. By opening a PR, you
+> agree to make your contribution available under that license.
 >
-> **Quem propõe o PKGBUILD é responsável pela autoria declarada nele.** Ao
-> enviar, você declara que as linhas de autoria são verdadeiras e que tem o
-> direito de licenciar o conteúdo sob a 0BSD. Isso inclui dar o devido crédito
-> quando o PKGBUILD for baseado no trabalho de outra pessoa (Arch, AUR ou
-> outro repositório).
+> **Whoever proposes a PKGBUILD is responsible for the authorship declared in
+> it.** By submitting, you declare that the authorship lines are true and that
+> you have the right to license the content under 0BSD. This includes giving
+> proper credit when the PKGBUILD is based on someone else's work (Arch, AUR
+> or another repository).
 
-A autoria e a licença de cada arquivo são indicadas no começo dele, com as
-tags [SPDX](https://spdx.dev/learn/handling-license-info/) no formato do
-[REUSE](https://reuse.software/spec/):
+The authorship and license of each file are stated at its top, with
+[SPDX](https://spdx.dev/learn/handling-license-info/) tags in the
+[REUSE](https://reuse.software/spec/) format:
 
 ```bash
-# SPDX-FileCopyrightText: 2026 Seu Nome <seu@email>
+# SPDX-FileCopyrightText: 2026 Your Name <your@email>
 # SPDX-License-Identifier: 0BSD
-# Maintainer: Seu Nome <seu@email>
+# Maintainer: Your Name <your@email>
 
 pkgname=foo
 ...
 ```
 
-- **`SPDX-FileCopyrightText`**: uma linha por autor, com o ano da contribuição.
-  Quem fizer uma mudança significativa adiciona a própria linha, sem apagar as
-  anteriores.
-- **`SPDX-License-Identifier`**: sempre `0BSD`. É a licença do arquivo de
-  empacotamento.
-- **`Maintainer` / `Contributor`**: a convenção do Arch para indicar quem
-  mantém o pacote. Quem deixar de manter vira `Contributor`.
-- **Baseado no Arch:** os repositórios de empacotamento do Arch também usam
-  0BSD. Mantenha as linhas `Maintainer`/`Contributor` originais e acrescente
-  `# SPDX-FileCopyrightText: Arch Linux contributors`. O
-  `scripts/import-arch.sh` faz isso automaticamente.
-- **Baseado no AUR:** o AUR não tem uma licença única. Só envie se o autor
-  original permitir a redistribuição sob 0BSD, e mantenha o crédito dele.
-- **E-mail:** pode ser o endereço `noreply` do GitHub ou um e-mail ofuscado
-  (`nome at dominio dot com`).
+- **`SPDX-FileCopyrightText`**: one line per author, with the year of the
+  contribution. Whoever makes a significant change adds their own line,
+  without removing the previous ones.
+- **`SPDX-License-Identifier`**: always `0BSD`. It is the license of the
+  packaging file.
+- **`Maintainer` / `Contributor`**: the Arch convention for who maintains the
+  package. A maintainer who steps down becomes a `Contributor`.
+- **Based on Arch:** Arch's packaging repositories also use 0BSD. Keep the
+  original `Maintainer`/`Contributor` lines and add
+  `# SPDX-FileCopyrightText: Arch Linux contributors`.
+  `scripts/import-arch.sh` does this automatically.
+- **Based on the AUR:** the AUR has no single license. Only submit it if the
+  original author allows redistribution under 0BSD, and keep their credit.
+- **Email:** it can be your GitHub `noreply` address or an obfuscated email
+  (`name at domain dot com`).
 
-Não confunda os dois campos de licença. O cabeçalho `SPDX-License-Identifier`
-é a licença **do PKGBUILD**, sempre 0BSD. O `license=()` dentro do PKGBUILD é a
-licença **do programa empacotado**, por exemplo `GPL-3.0-or-later` ou `MIT`.
+Don't mix up the two license fields. The `SPDX-License-Identifier` header is
+the license **of the PKGBUILD**, always 0BSD. The `license=()` inside the
+PKGBUILD is the license **of the packaged program**, for example
+`GPL-3.0-or-later` or `MIT`.
 
-## Limitações conhecidas
+## Known limitations
 
-- Se o pacote que você quer propor depende de outro que ainda não está neste
-  repositório, envie a dependência primeiro, num PR separado. O teste do PR só
-  encontra dependências que já foram publicadas.
-- Pacotes `-git`, que seguem commits em vez de versões, não são aceitos por
-  enquanto: o monitoramento acompanha apenas tags e releases.
-- Pacotes com epoch (`1:2.0-1`) são publicados com `.` no lugar de `:` no nome
-  do arquivo, porque o GitHub não aceita `:` em arquivos de Release. Isso não
-  afeta a instalação.
+- If the package you want to propose depends on another one that isn't in
+  this repository yet, submit the dependency first, in a separate PR. The PR
+  test only finds dependencies that have already been published.
+- `-git` packages, which track commits instead of versions, are not accepted
+  for now: the monitoring only follows tags and releases.
+- Packages with an epoch (`1:2.0-1`) are published with `.` instead of `:` in
+  the file name, because GitHub doesn't accept `:` in Release files. This
+  doesn't affect installation.
 
-## Licença
+## License
 
-Os arquivos de empacotamento deste repositório (PKGBUILDs, scripts de init,
-scripts e workflows) estão sob a licença [0BSD](LICENSE). Os programas
-empacotados mantêm cada um a sua própria licença, indicada no campo
-`license=()` do PKGBUILD e instalada em `/usr/share/licenses/<pacote>`.
+The packaging files in this repository (PKGBUILDs, init scripts, scripts and
+workflows) are under the [0BSD](LICENSE) license. Each packaged program keeps
+its own license, stated in the PKGBUILD's `license=()` field and installed in
+`/usr/share/licenses/<package>`.

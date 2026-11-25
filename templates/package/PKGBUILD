@@ -1,23 +1,23 @@
-# SPDX-FileCopyrightText: 2026 Seu Nome <seu@email>
+# SPDX-FileCopyrightText: 2026 Your Name <your@email>
 # SPDX-License-Identifier: 0BSD
-# Maintainer: Seu Nome <seu@email>
+# Maintainer: Your Name <your@email>
 #
-# Modelo de pacote. Copie este diretório para packages/<inicial>/<nome> e
-# ajuste (ex.: packages/f/foo).
-# Scripts de init vão num pacote separado: veja templates/package-openrc.
+# Package template. Copy this directory to packages/<initial>/<name> and
+# adjust it (e.g. packages/f/foo).
+# Init scripts go in a separate package: see templates/package-openrc.
 
-pkgname=exemplo
+pkgname=example
 pkgver=1.0.0
 pkgrel=1
-pkgdesc="Descrição curta do programa"
+pkgdesc="Short description of the program"
 arch=(x86_64)
-url="https://github.com/DONO/exemplo"
+url="https://github.com/OWNER/example"
 license=(MIT)
 depends=()
 makedepends=()
-# Fonte direto do upstream. O nome local evita colisão entre pacotes.
+# Source straight from upstream. The local name avoids clashes between packages.
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-# scripts/bump.sh preenche via updpkgsums.
+# Filled in by updpkgsums (scripts/bump.sh runs it).
 sha256sums=('SKIP')
 
 build() {

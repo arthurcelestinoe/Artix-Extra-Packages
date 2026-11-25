@@ -1,10 +1,10 @@
 #!/usr/bin/openrc-run
-# SPDX-FileCopyrightText: 2026 Seu Nome <seu@email>
+# SPDX-FileCopyrightText: 2026 Your Name <your@email>
 # SPDX-License-Identifier: 0BSD
 
-description="Daemon de exemplo"
-command="/usr/bin/exemplo"
-command_args="${EXEMPLO_ARGS}"
+description="Example daemon"
+command="/usr/bin/example"
+command_args="${EXAMPLE_ARGS}"
 command_background=true
 pidfile="/run/${RC_SVCNAME}.pid"
 

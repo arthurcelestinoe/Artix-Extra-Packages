@@ -1,4 +1,4 @@
-name: Compilar e publicar
+name: Build and publish
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       packages:
-        description: 'Pacotes separados por espaço, ou "all"'
+        description: 'Space-separated package names, or "all"'
         required: true
         default: all
 
@@ -41,7 +41,7 @@ jobs:
             json=$(scripts/changed-packages.sh --diff "$BEFORE" "$SHA")
           fi
           echo "packages=$json" >> "$GITHUB_OUTPUT"
-          echo "a compilar: $json"
+          echo "to build: $json"
 
   build:
     needs: detect
@@ -53,18 +53,18 @@ jobs:
       matrix:
         package: ${{ fromJSON(needs.detect.outputs.packages) }}
     steps:
-      - name: Atualizar o sistema
+      - name: Update the system
         run: |
           pacman-key --init
           pacman-key --populate artix
           pacman -Syu --noconfirm --needed git
       - uses: actions/checkout@v5
       - run: scripts/ci-setup.sh
-      - name: Compilar
+      - name: Build
         env:
           PKG: ${{ matrix.package }}
         run: scripts/build-package.sh "$PKG" out
-      - name: Conferir regras
+      - name: Check rules
         env:
           PKG: ${{ matrix.package }}
         run: scripts/lint-package.sh "$PKG" out
@@ -76,7 +76,7 @@ jobs:
 
   publish:
     needs: build
-    # Publica o que compilou, mesmo que algum pacote da matriz tenha falhado.
+    # Publishes whatever was built, even if some package in the matrix failed.
     if: ${{ !cancelled() && needs.build.result != 'skipped' }}
     runs-on: ubuntu-latest
     permissions:
@@ -91,7 +91,7 @@ jobs:
           pattern: pkg-*
           merge-multiple: true
           path: out
-      - name: Publicar no Release "repo"
+      - name: Publish to the "repo" Release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}

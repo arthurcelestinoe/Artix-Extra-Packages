@@ -1,5 +1,0 @@
-# SPDX-FileCopyrightText: 2026 Seu Nome <seu@email>
-# SPDX-License-Identifier: 0BSD
-#
-# Argumentos extras passados ao daemon.
-EXEMPLO_ARGS=""

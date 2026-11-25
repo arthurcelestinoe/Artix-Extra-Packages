@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Compila um pacote e copia os .pkg.tar.zst para o diretório de saída.
-# Uso: scripts/build-package.sh <pacote> [saída=out/]
+# Builds a package and copies the .pkg.tar.zst files to the output directory.
+# Usage: scripts/build-package.sh <package> [output=out/]
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
-pkg=${1:?uso: $0 <pacote> [diretório de saída]}
-valid_pkg "$pkg" || die "pacote '$pkg' não encontrado em packages/<inicial>/"
+pkg=${1:?usage: $0 <package> [output directory]}
+valid_pkg "$pkg" || die "package '$pkg' not found in packages/<initial>/"
 out=$(realpath -m "${2:-$ROOT/out}")
 mkdir -p "$out"
 
@@ -23,6 +23,6 @@ as_builder mkdir -p "$build/_out"
 
 shopt -s nullglob
 built=("$build"/_out/*.pkg.tar.*)
-(( ${#built[@]} )) || die "makepkg não gerou nenhum pacote"
+(( ${#built[@]} )) || die "makepkg did not produce any package"
 cp "${built[@]}" "$out/"
-printf 'gerado: %s\n' "${built[@]##*/}"
+printf 'built: %s\n' "${built[@]##*/}"

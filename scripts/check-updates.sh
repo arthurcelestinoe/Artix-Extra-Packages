@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Consulta o upstream de cada pacote com nvchecker e imprime, em JSON, os que
-# têm versão nova: [{"pkg":"foo","version":"1.2.3"}, ...]
-# Uso: scripts/check-updates.sh [pacote...]   (sem argumentos: todos)
+# Queries each package's upstream with nvchecker and prints, as JSON, the ones
+# with a new version: [{"pkg":"foo","version":"1.2.3"}, ...]
+# Usage: scripts/check-updates.sh [package...]   (no arguments: all)
 #
-# Cada pacote declara seu upstream em packages/<inicial>/<pacote>/.nvchecker.toml, no
-# mesmo formato usado pelos repositórios de empacotamento do Arch.
-# Defina GITHUB_TOKEN para evitar o limite de requisições da API do GitHub.
+# Each package declares its upstream in packages/<initial>/<package>/.nvchecker.toml,
+# in the same format used by Arch's packaging repositories.
+# Set GITHUB_TOKEN to avoid the GitHub API rate limit.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
-command -v nvchecker >/dev/null || die "instale o nvchecker (pacman -S nvchecker)"
-command -v jq >/dev/null || die "instale o jq"
+command -v nvchecker >/dev/null || die "install nvchecker (pacman -S nvchecker)"
+command -v jq >/dev/null || die "install jq"
 
 if (( $# )); then pkgs=("$@"); else mapfile -t pkgs < <(list_packages); fi
 
@@ -21,12 +21,12 @@ printf '[__config__]\noldver = "%s/old.json"\nnewver = "%s/new.json"\n\n' "$work
 
 declare -A current=()
 for pkg in "${pkgs[@]}"; do
-    valid_pkg "$pkg" || die "pacote '$pkg' não encontrado"
+    valid_pkg "$pkg" || die "package '$pkg' not found"
     cfg=$(pkg_dir "$pkg")/.nvchecker.toml
-    # Pacotes de init não têm upstream: a versão é a data do script.
+    # Init packages have no upstream: their version is the script's date.
     if [[ ! -f $cfg && $pkg =~ -(openrc|runit|s6|dinit)$ ]]; then continue; fi
-    if [[ ! -f $cfg ]]; then warn "$pkg: sem .nvchecker.toml, ignorado"; continue; fi
-    grep -q "^\[\"\?$pkg\"\?\]" "$cfg" || die "$pkg: a seção do .nvchecker.toml deve se chamar [$pkg]"
+    if [[ ! -f $cfg ]]; then warn "$pkg: no .nvchecker.toml, skipped"; continue; fi
+    grep -q "^\[\"\?$pkg\"\?\]" "$cfg" || die "$pkg: the .nvchecker.toml section must be named [$pkg]"
     current[$pkg]=$(pkgbuild_var "$(pkg_dir "$pkg")/PKGBUILD" pkgver)
     cat "$cfg" >> "$conf"
     echo >> "$conf"
@@ -38,7 +38,7 @@ for pkg in "${!current[@]}"; do
     jq -n --arg k "$pkg" --arg v "${current[$pkg]}" '{($k): {version: $v}}'
 done | jq -s '{version: 2, data: add}' > "$work/old.json"
 
-# Logs do nvchecker vão para stderr; stdout fica só com o resultado.
+# nvchecker logs go to stderr; stdout carries only the result.
 nvchecker -c "$conf" >&2
 
 jq -r '.data | to_entries[] | "\(.key)\t\(.value.version)"' "$work/new.json" |

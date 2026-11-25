@@ -13,7 +13,7 @@ depends=(pacman git)
 makedepends=('go>=2:1.26')
 optdepends=('sudo: privilege elevation'
             'opendoas: privilege elevation')
-# LTO não combina com o linker externo do cgo.
+# LTO does not mix with cgo's external linker.
 options=(!lto)
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('acd3c97fac52449ba3589fefc076b90f42fa5072ef274f5bcbcd381f50b2701a')
@@ -21,7 +21,7 @@ sha256sums=('acd3c97fac52449ba3589fefc076b90f42fa5072ef274f5bcbcd381f50b2701a')
 prepare() {
   cd "$pkgname-$pkgver"
   export GOPATH="$srcdir/gopath"
-  # Baixa os módulos aqui, para o build() não depender de rede.
+  # Download modules here, so build() does not need network access.
   go mod download -modcacherw
 }
 
@@ -33,7 +33,7 @@ build() {
   export CGO_CFLAGS="$CFLAGS"
   export CGO_CXXFLAGS="$CXXFLAGS"
   export CGO_LDFLAGS="$LDFLAGS"
-  # O Makefile já usa -trimpath -mod=readonly -modcacherw -buildmode=pie.
+  # The Makefile already uses -trimpath -mod=readonly -modcacherw -buildmode=pie.
   make VERSION="$pkgver" PREFIX=/usr build
 }
 

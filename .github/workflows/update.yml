@@ -1,8 +1,8 @@
-name: Verificar upstream
+name: Check upstream
 
 on:
   schedule:
-    - cron: '17 6 * * *'   # todo dia, 06:17 UTC
+    - cron: '17 6 * * *'   # every day, 06:17 UTC
   workflow_dispatch:
 
 env:
@@ -19,7 +19,8 @@ jobs:
     outputs:
       updates: ${{ steps.check.outputs.updates }}
     steps:
-      - run: |
+      - name: Update the system
+        run: |
           pacman-key --init
           pacman-key --populate artix
           pacman -Syu --noconfirm --needed git nvchecker jq
@@ -31,10 +32,10 @@ jobs:
           git config --global --add safe.directory '*'
           updates=$(scripts/check-updates.sh)
           echo "updates=$updates" >> "$GITHUB_OUTPUT"
-          echo "versões novas: $updates"
+          echo "new versions: $updates"
 
-  # Para cada versão nova: atualiza o PKGBUILD, testa a compilação e só então
-  # abre (ou atualiza) um PR. O merge do PR dispara o build.yml e publica.
+  # For each new version: updates the PKGBUILD, test-builds it and only then
+  # opens (or updates) a PR. Merging the PR triggers build.yml, which publishes.
   bump:
     needs: check
     if: needs.check.outputs.updates != '[]'
@@ -48,18 +49,19 @@ jobs:
       matrix:
         update: ${{ fromJSON(needs.check.outputs.updates) }}
     steps:
-      - run: |
+      - name: Update the system
+        run: |
           pacman-key --init
           pacman-key --populate artix
           pacman -Syu --noconfirm --needed git pacman-contrib
       - uses: actions/checkout@v5
       - run: scripts/ci-setup.sh
-      - name: Atualizar PKGBUILD
+      - name: Update PKGBUILD
         env:
           PKG: ${{ matrix.update.pkg }}
           VER: ${{ matrix.update.version }}
         run: scripts/bump.sh "$PKG" "$VER"
-      - name: Testar compilação
+      - name: Test build
         env:
           PKG: ${{ matrix.update.pkg }}
         run: scripts/build-package.sh "$PKG" /tmp/test-out
@@ -71,5 +73,5 @@ jobs:
           commit-message: '${{ matrix.update.pkg }}: ${{ matrix.update.version }}'
           title: '${{ matrix.update.pkg }}: ${{ matrix.update.version }}'
           body: |
-            Versão nova detectada no upstream pelo nvchecker.
-            O PKGBUILD foi atualizado e compilou no container do Artix.
+            New upstream version detected by nvchecker.
+            The PKGBUILD was updated and built successfully in the Artix container.

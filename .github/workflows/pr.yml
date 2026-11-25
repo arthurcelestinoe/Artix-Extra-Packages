@@ -1,8 +1,8 @@
-name: Testar pull request
+name: Test pull request
 
-# Compila os pacotes alterados num PR e confere as regras do README.
-# Não publica nada. Em PRs de fork, o GitHub roda este workflow sem acesso aos
-# secrets e com token só de leitura. Nunca troque por pull_request_target.
+# Builds the packages changed in a PR and checks the README rules.
+# Publishes nothing. For PRs from forks, GitHub runs this workflow without access
+# to secrets and with a read-only token. Never switch to pull_request_target.
 
 on:
   pull_request:
@@ -35,7 +35,7 @@ jobs:
         run: |
           json=$(scripts/changed-packages.sh --diff "$BASE" HEAD)
           echo "packages=$json" >> "$GITHUB_OUTPUT"
-          echo "a testar: $json"
+          echo "to test: $json"
 
   build:
     needs: detect
@@ -47,7 +47,7 @@ jobs:
       matrix:
         package: ${{ fromJSON(needs.detect.outputs.packages) }}
     steps:
-      - name: Atualizar o sistema
+      - name: Update the system
         run: |
           pacman-key --init
           pacman-key --populate artix
@@ -56,11 +56,11 @@ jobs:
         with:
           persist-credentials: false
       - run: scripts/ci-setup.sh
-      - name: Compilar
+      - name: Build
         env:
           PKG: ${{ matrix.package }}
         run: scripts/build-package.sh "$PKG" out
-      - name: Conferir regras
+      - name: Check rules
         env:
           PKG: ${{ matrix.package }}
         run: scripts/lint-package.sh "$PKG" out

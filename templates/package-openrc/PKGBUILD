@@ -1,26 +1,27 @@
-# SPDX-FileCopyrightText: 2026 Seu Nome <seu@email>
+# SPDX-FileCopyrightText: 2026 Your Name <your@email>
 # SPDX-License-Identifier: 0BSD
-# Maintainer: Seu Nome <seu@email>
+# Maintainer: Your Name <your@email>
 #
-# Modelo de pacote de init, no formato que o Artix usa: um PKGBUILD próprio,
-# separado do pacote principal. Copie para packages/<inicial>/<nome>-openrc e
-# ajuste (ex.: packages/f/foo-openrc, ao lado de packages/f/foo).
-# Para runit, s6 e dinit, a estrutura é a mesma; mudam os arquivos instalados,
-# a dependência do init e o nome (<nome>-runit, <nome>-s6, <nome>-dinit).
+# Init package template, in the layout Artix uses: its own PKGBUILD,
+# separate from the main package. Copy it to packages/<initial>/<name>-openrc
+# and adjust it (e.g. packages/f/foo-openrc, next to packages/f/foo).
+# For runit, s6 and dinit the structure is the same; what changes are the
+# installed files, the init dependency and the name (<name>-runit, <name>-s6,
+# <name>-dinit).
 #
-# O pkgver é a data da última mudança no script (AAAAMMDD), não a versão do
-# programa. Pacotes de init não têm .nvchecker.toml.
+# pkgver is the date of the script's last change (YYYYMMDD), not the
+# program's version. Init packages have no .nvchecker.toml.
 
-_pkgname=exemplo
+_pkgname=example
 pkgname=$_pkgname-openrc
 pkgver=20260101
 pkgrel=1
-pkgdesc="Script do OpenRC para $_pkgname"
+pkgdesc="OpenRC init script for $_pkgname"
 arch=(any)
 url="https://github.com/arthurcelestinoe/Artix-Extra-Packages"
 license=(0BSD)
 depends=(openrc "$_pkgname")
-# Só um pacote de init por programa pode estar instalado.
+# Only one init package per program can be installed.
 provides=("init-$_pkgname")
 conflicts=("init-$_pkgname")
 source=("$_pkgname.initd"
