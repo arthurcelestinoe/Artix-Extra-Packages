@@ -14,12 +14,20 @@ chmod 440 /etc/sudoers.d/builder
 git config --global --add safe.directory '*'
 
 # If our repository already exists, enable it, for packages that depend on
-# other packages from here. In CI we trust our own artifacts.
+# other packages from here. The database and packages are signed, so the
+# public key from keys/ must be in pacman's keyring before syncing.
 if [[ -n ${REPO_URL:-} ]] && curl -fsIL "$REPO_URL/$REPO_NAME.db" >/dev/null; then
+    key=$ROOT/keys/$REPO_NAME.asc
+    [[ -f $key ]] || die "public key not found: ${key#"$ROOT"/}"
+    fpr=$(gpg --with-colons --show-keys "$key" | awk -F: '/^fpr/ { print $10; exit }')
+    [[ -n $fpr ]] || die "could not read the fingerprint from ${key#"$ROOT"/}"
+    pacman-key --add "$key"
+    pacman-key --lsign-key "$fpr"
+
     cat >> /etc/pacman.conf <<EOF
 
 [$REPO_NAME]
-SigLevel = Optional TrustAll
+SigLevel = Required
 Server = $REPO_URL
 EOF
     pacman -Sy --noconfirm
