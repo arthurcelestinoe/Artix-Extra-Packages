@@ -7,12 +7,13 @@
 # Adapted from Arch Linux packaging (see .arch-commit):
 # - no systemd user unit: start the shell from the compositor with "dms run"
 #   (see dux-shell.install);
-# - dropped the systemd (systemd-networkd) optional dependency.
+# - dropped the systemd (systemd-networkd) optional dependency;
+# - added dux-gop as an optional dependency (used by the monitoring widgets).
 
 pkgname=dux-shell
 _qml_common=dux-qml-common
 pkgver=2.1.2
-pkgrel=1
+pkgrel=2
 pkgdesc='A Quickshell-based desktop shell with Material 3 design principles'
 arch=(x86_64 aarch64)
 url="https://github.com/duxlabs-dev/$pkgname"
@@ -21,6 +22,7 @@ depends=(accountsservice
          quickshell)
 optdepends=('cava: Audio visualizer'
             'cups-pk-helper: Printer Management'
+            'dux-gop: System monitoring widgets'
             'i2c-tools: External monitor brightness control'
             'iwd: Required for network management via iwd'
             'matugen: Dynamic wallpaper-based theming'

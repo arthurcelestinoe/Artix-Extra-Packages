@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: Arch Linux contributors
+# SPDX-FileCopyrightText: 2026 Arthur Celestino <138810414+arthurcelestinoe@users.noreply.github.com>
+# SPDX-License-Identifier: 0BSD
+# Maintainer: Arthur Celestino <138810414+arthurcelestinoe@users.noreply.github.com>
+# Contributor: Caleb Maclennan <caleb@alerque.com>
+#
+# Adapted from Arch Linux packaging (see .arch-commit):
+# - compile in build() instead of prepare().
+
+pkgname=dux-gop
+_pkgname=dgop
+pkgver=2.1.1
+pkgrel=1
+pkgdesc='System monitoring CLI + REST API'
+arch=(x86_64 aarch64 armv7h)
+url="https://github.com/duxlabs-dev/$pkgname"
+license=(MIT)
+depends=(glibc)
+provides=("dgop=$pkgver")
+conflicts=(dgop)
+replaces=(dgop)
+makedepends=(go)
+_archive="$pkgname-$pkgver"
+source=("$url/archive/v$pkgver/$_archive.tar.gz")
+sha256sums=('6577264abfecedd239062e61f46e838f265dd4fd9244381a28bfddc98fb2def7')
+
+build() {
+	cd "$_archive"
+	export CGO_CPPFLAGS="$CPPFLAGS"
+	export CGO_CFLAGS="$CFLAGS"
+	export CGO_CXXFLAGS="$CXXFLAGS"
+	export CGO_LDFLAGS="$LDFLAGS"
+	export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+	go build "./cmd/$_pkgname"
+}
+
+package() {
+	cd "$_archive"
+	install -Dm0755 -t "$pkgdir/usr/bin/" "$_pkgname"
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
+}
