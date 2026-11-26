@@ -79,7 +79,11 @@ prepare() {
 		lib/utils/update_check_flag_file.dart
 	grep -q 'const updateCheckFlag = false;' lib/utils/update_check_flag_file.dart
 
-	flutter pub get --enforce-lockfile
+	# The committed pubspec.lock was resolved with an older Flutter (3.24), and
+	# the fork has no lock for this release resolved with the Flutter it builds
+	# with. Like the fork's own release CI, let pub keep the locked versions and
+	# adjust only the packages pinned by this Flutter SDK.
+	flutter pub get
 
 	# The audiotags plugin downloads a prebuilt libaudiotags.so from GitHub.
 	# Build it from the Rust source shipped in the plugin instead, with the
