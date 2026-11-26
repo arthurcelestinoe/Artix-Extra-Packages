@@ -1,0 +1,120 @@
+# SPDX-FileCopyrightText: 2026 Arthur Celestino <138810414+arthurcelestinoe@users.noreply.github.com>
+# SPDX-License-Identifier: 0BSD
+# Maintainer: Arthur Celestino <138810414+arthurcelestinoe@users.noreply.github.com>
+#
+# Harmony Music from the maintained fork by NPP-exe (the original
+# anandnet/Harmony-Music is inactive).
+#
+# Flutter is not packaged on Artix or Arch, so the official Flutter SDK
+# release is used as the build toolchain. The app is built from source; the
+# Flutter engine bundled in the package is the official prebuilt one (see the
+# Flutter exception in the README).
+#
+# When bumping pkgver, check the Flutter version the fork builds with
+# (.github/workflows/linux_release.yml, "flutter-version") and update _flutter.
+
+pkgname=harmony-music
+_binname=harmonymusic
+_srcname=Harmony-Music
+pkgver=1.24.0
+pkgrel=1
+_flutter=3.29.0
+pkgdesc="Cross-platform app for streaming music from YouTube Music (NPP-exe fork)"
+arch=(x86_64)
+url="https://github.com/NPP-exe/Harmony-Music"
+license=(GPL-3.0-only)
+depends=(gcc-libs
+         glib2
+         glibc
+         gtk3
+         libayatana-appindicator
+         mpv)
+makedepends=(clang
+             cmake
+             git
+             jdk17-openjdk
+             ninja
+             rust
+             unzip)
+# Stripping breaks Flutter's AOT snapshot (libapp.so); LTO flags don't apply
+# to Flutter's clang build.
+options=(!strip !debug !lto)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
+        "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${_flutter}-stable.tar.xz"
+        "$_binname.desktop")
+sha256sums=('a94818a2bd82904f3b64eeee7f230dbbc81382b4db9cd4cf68353e7753e7f727'
+            '1f98f3de2931e1d097970e56df691b035f6840aa05be632c4fa2a2298c7cfdd8'
+            'a3aed4e0b09d986dbbe9f56b41d70e294d9aa11a1a5fe001efc80d388755eec9')
+
+_srcenv() {
+	# Keep Flutter, Dart, pub and cargo state inside $srcdir.
+	export HOME="$srcdir/home"
+	export PUB_CACHE="$srcdir/pub-cache"
+	export CARGO_HOME="$srcdir/cargo"
+	export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+	export PATH="$srcdir/flutter/bin:$PATH"
+	mkdir -p "$HOME"
+}
+
+# Directory of the audiotags plugin in the pub cache (exactly one expected).
+_audiotags_dir() {
+	local dirs=("$PUB_CACHE"/hosted/pub.dev/audiotags-*/)
+	if (( ${#dirs[@]} != 1 )) || [[ ! -d ${dirs[0]} ]]; then
+		echo "expected exactly one audiotags plugin in the pub cache" >&2
+		return 1
+	fi
+	printf '%s\n' "${dirs[0]%/}"
+}
+
+prepare() {
+	_srcenv
+	flutter --disable-analytics
+	dart --disable-analytics
+	flutter precache --linux
+
+	cd "$_srcname-$pkgver"
+
+	# Updates come from this repository, not from the app.
+	sed -i 's/const updateCheckFlag = true;/const updateCheckFlag = false;/' \
+		lib/utils/update_check_flag_file.dart
+	grep -q 'const updateCheckFlag = false;' lib/utils/update_check_flag_file.dart
+
+	flutter pub get --enforce-lockfile
+
+	# The audiotags plugin downloads a prebuilt libaudiotags.so from GitHub.
+	# Build it from the Rust source shipped in the plugin instead, with the
+	# Cargo.lock the fork maintains for its Nix build.
+	local at
+	at=$(_audiotags_dir)
+	sed -i '/^# Download the binary from GitHub\.$/,/^# List of absolute paths/{/^# List of absolute paths/!d}' \
+		"$at/linux/CMakeLists.txt"
+	if grep -q 'file(DOWNLOAD' "$at/linux/CMakeLists.txt"; then
+		echo "audiotags CMakeLists.txt still downloads a binary" >&2
+		return 1
+	fi
+	cp nix/audiotags/Cargo.lock "$at/rust/Cargo.lock"
+	cargo fetch --locked --manifest-path "$at/rust/Cargo.toml"
+}
+
+build() {
+	_srcenv
+	local at
+	at=$(_audiotags_dir)
+	cargo build --frozen --release \
+		--manifest-path "$at/rust/Cargo.toml" \
+		--target-dir "$srcdir/audiotags-target"
+	install -m755 "$srcdir/audiotags-target/release/libaudiotags.so" "$at/linux/libaudiotags.so"
+
+	cd "$_srcname-$pkgver"
+	flutter build linux --release --no-pub
+}
+
+package() {
+	cd "$_srcname-$pkgver"
+	install -d "$pkgdir/usr/lib/$pkgname" "$pkgdir/usr/bin"
+	cp -a build/linux/x64/release/bundle/. "$pkgdir/usr/lib/$pkgname/"
+	ln -s "/usr/lib/$pkgname/$_binname" "$pkgdir/usr/bin/$_binname"
+
+	install -Dm644 "$srcdir/$_binname.desktop" -t "$pkgdir/usr/share/applications/"
+	install -Dm644 assets/icons/icon.png "$pkgdir/usr/share/icons/hicolor/512x512/apps/$_binname.png"
+}

@@ -1,0 +1,5 @@
+[harmony-music]
+source = "github"
+github = "NPP-exe/Harmony-Music"
+use_latest_release = true
+prefix = "v"

@@ -116,6 +116,13 @@ se ele se encaixa nas regras abaixo.
 - Pacotes que **não** estão nos repositórios oficiais do Artix. Confira em
   [packages.artixlinux.org](https://packages.artixlinux.org) antes.
 - Pacotes compilados a partir do código-fonte do upstream.
+- **Exceção para toolchains que não existem no Artix:** quando a toolchain de
+  compilação não está empacotada no Artix, a release oficial do upstream pode
+  ser baixada como fonte, com checksum. Na prática, isso vale para o SDK do
+  Flutter: em apps Flutter, o motor do Flutter que vai no pacote é o oficial
+  pré-compilado. O app e o código nativo dos plugins continuam tendo que ser
+  compilados a partir do código-fonte; bibliotecas pré-compiladas de plugins
+  baixadas durante o build não são aceitas.
 
 ### O que não é aceito
 

@@ -116,6 +116,13 @@ check that it fits the rules below.
 - Packages that are **not** in the official Artix repositories. Check
   [packages.artixlinux.org](https://packages.artixlinux.org) first.
 - Packages built from the upstream source code.
+- **Exception for toolchains missing from Artix:** when the build toolchain
+  isn't packaged in Artix, its official upstream release may be downloaded as
+  a source, with a checksum. In practice this means the Flutter SDK: in
+  Flutter apps, the Flutter engine shipped in the package is the official
+  prebuilt one. The app itself and the native code of its plugins must still
+  be built from source; prebuilt plugin libraries downloaded during the build
+  are not accepted.
 
 ### What is not accepted
 

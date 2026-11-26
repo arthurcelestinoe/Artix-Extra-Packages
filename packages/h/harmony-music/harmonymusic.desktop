@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Harmony Music
+GenericName=Music Player
+Comment=Stream music from YouTube and YouTube Music
+Exec=harmonymusic
+Icon=harmonymusic
+Terminal=false
+Categories=AudioVideo;Audio;Music;
