@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Arthur Celestino <138810414+arthurcelestinoe@users.noreply.github.com>
+# SPDX-License-Identifier: 0BSD
+
+_note() {
+  cat <<'EOF'
+==> Dux Shell has no systemd user service on Artix. Start it from your
+    compositor's autostart with "dms run", for example:
+      niri:     spawn-at-startup "dms" "run"
+      Hyprland: exec-once = dms run
+      sway:     exec dms run
+EOF
+}
+
+post_install() {
+  _note
+}
