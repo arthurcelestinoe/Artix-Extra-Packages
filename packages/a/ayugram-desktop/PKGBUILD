@@ -86,6 +86,9 @@ optdepends=('crow-translate: translation provider'
             'webkit2gtk-4.1: embedded browser features provided by webkit2gtk-4.1 (gtk3)'
             'webkitgtk-6.0: embedded browser features provided by webkitgtk-6.0 (gtk4)'
             'xdg-desktop-portal: desktop integration')
+# The LTO link of the whole client runs out of memory on GitHub's runners
+# (16 GB) and gets killed in lto1.
+options=(!lto)
 source=("$pkgname-$pkgver-full.tar.gz::$url/releases/download/v$pkgver/AyuGramDesktop-$pkgver-full.tar.gz"
         "td-$_td_commit.tar.gz::https://github.com/tdlib/td/archive/$_td_commit.tar.gz")
 sha256sums=('ead2665a32f38277e76d3041a5b780100afa0d87b7b1440c1278c5229936a842'
